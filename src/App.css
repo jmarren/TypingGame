@@ -1,0 +1,98 @@
+/* CenteredDiv.css */
+* {
+  display: borderbox;
+}
+
+.centered {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* Add additional styles as needed */
+}
+
+#title {
+  font-family: bradley hand, cursive;
+  font-size: 4em;
+}
+
+#console {
+  background-color: #d3d9e3;
+  position: fixed;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 70%;
+  border: 2px solid black
+}
+
+#display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  top: 7.5%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 15%;
+  /* max-width: 800px;
+  max-height: 800px; */
+  border: 2px solid black;
+  font-size: 4em;
+}
+
+/* Keyboard.css */
+.keyboard {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  height: 43.8vh;
+  background-color: #eee;
+  padding: 20px;
+  position: relative;
+  top: 0%;
+}
+
+.key {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 115px;
+  height: 115px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 24px;
+  cursor: pointer;
+  user-select: none;
+  flex: 0 0 calc(10% - 10px)
+}
+
+.key:hover {
+  background-color: #f2f2f2;
+}
+
+.key:active {
+  background-color: #b2a7a7;
+}
+
+.key:nth-child(n + 11) {
+  flex-basis: calc(11.111% - 10px)
+}
+
+#matching {
+  color: green;
+}
+
+#console {
+  font-family: courier;
+}
+
+#stats {
+  height: 15%;
+  display: flex;
+  justify-content: space-around;
+}
