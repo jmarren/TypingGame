@@ -24,7 +24,9 @@
   transform: translate(-50%, -50%);
   width: 80%;
   height: 70%;
-  border: 2px solid black
+  border: 2px solid black;
+  border-radius: 20px;
+  display: border-box;
 }
 
 #display {
@@ -41,6 +43,7 @@
   max-height: 800px; */
   border: 2px solid black;
   font-size: 4em;
+  border-radius: 20px;
 }
 
 /* Keyboard.css */
@@ -49,11 +52,12 @@
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  height: 43.8vh;
+  height: 43.7vh;
   background-color: #eee;
   padding: 20px;
   position: relative;
   top: 0%;
+  border-radius: 20px;
 }
 
 .key {
@@ -68,7 +72,8 @@
   font-size: 24px;
   cursor: pointer;
   user-select: none;
-  flex: 0 0 calc(10% - 10px)
+  flex: 0 0 calc(10% - 10px);
+  color: white;
 }
 
 .key:hover {
@@ -95,4 +100,28 @@
   height: 15%;
   display: flex;
   justify-content: space-around;
+}
+
+#settings-button {
+  display: flex;
+  position: fixed;
+  left: 5px;
+  height: 30px;
+  width: 70px;
+  font-size: 15px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 30px
+}
+#account-button {
+  display: flex;
+  position: fixed;
+  left: 5px;
+  height: 30px;
+  width: 70px;
+  font-size: 15px;
+  justify-content: center;
+  align-items: center;
+  top: 50px;
+  border-radius: 30px
 }
