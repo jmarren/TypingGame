@@ -6,14 +6,7 @@ import Settings from "./Settings";
 import randomWords from "random-words";
 import Account from "./Account";
 import { db, auth } from "../config/firebase";
-import {
-  getDocs,
-  collection,
-  addDoc,
-  deleteDoc,
-  doc,
-  updateDoc,
-} from "firebase/firestore";
+import { getDocs, collection, addDoc, doc } from "firebase/firestore";
 
 const MainConsole = () => {
   //STATE
@@ -239,7 +232,10 @@ const MainConsole = () => {
         ...doc.data(),
         id: doc.id,
       }));
-      const scores = filteredData.map((item) => item["wordsPerMinute"]);
+      const currentUserData = filteredData.filter(
+        (obj) => obj.user === auth?.currentUser?.uid
+      );
+      const scores = currentUserData.map((item) => item["wordsPerMinute"]);
       const highScore = Math.max(...scores);
       setHighScore(highScore);
     } catch (error) {
