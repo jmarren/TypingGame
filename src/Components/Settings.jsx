@@ -24,10 +24,6 @@ function Settings() {
     setCheckboxValues(checkedValues);
   };
 
-  //   useEffect(() => {
-
-  //   })
-
   console.log(checkboxValues);
 
   const handleLetterCheckboxChange = (event) => {

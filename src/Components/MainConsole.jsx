@@ -5,26 +5,42 @@ import GameOver from "./GameOver";
 import Settings from "./Settings";
 import randomWords from "random-words";
 import Account from "./Account";
+import { db, auth } from "../config/firebase";
+import {
+  getDocs,
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 
 const MainConsole = () => {
   //STATE
-  const [wordIndex, setWordIndex] = useState(0);
   const [currentWord, setCurrentWord] = useState("");
   const [currentLetter, setCurrentLetter] = useState("");
   const [words, setWords] = useState(randomWords({ exactly: 100 }));
+  const [highScore, setHighScore] = useState(0);
 
   // CONTEXT
   const {
     gameOver,
+    setGameOver,
     openGameOver,
     settingsOpen,
     openSettings,
     accountModalOpen,
     openAccountModal,
     checkboxValues,
+    wordIndex,
+    setWordIndex,
+    gameStart,
+    setGameStart,
   } = useContext(AppContext);
 
-  console.log("checkBoxValues(mainConsole): " + checkboxValues);
+  useEffect(() => {
+    setCurrentWord(words[0]);
+  }, [words]);
 
   useEffect(() => {
     if (
@@ -32,11 +48,16 @@ const MainConsole = () => {
       checkboxValues[-1] === "randomWords"
     ) {
       setWords(randomWords({ exactly: 100 }));
-      setWordIndex((prevWordIndex) => prevWordIndex + 1);
     } else {
       setWords(generateStrings(checkboxValues));
     }
   }, [checkboxValues]);
+
+  useEffect(() => {
+    setWordIndex((prevIndex) => prevIndex + 1);
+    setCurrentWord((prevWord) => words[wordIndex + 1]);
+    setMatching(() => "");
+  }, [words, gameStart]);
 
   // GENERATE STRINGS FUNCTION
   function generateStrings(letters) {
@@ -59,15 +80,12 @@ const MainConsole = () => {
   //////
 
   const totalTime = 20;
-
+  //   const [wordIndex, setWordIndex] = useState(0);
   const [letterIndex, setLetterIndex] = useState(0);
   const [matching, setMatching] = useState("");
   const [timer, setTimer] = useState(totalTime); // Timer starting value
   const [started, setStarted] = useState(false); // Flag to indicate if the game has started
   const [typedWords, setTypedWords] = useState(-2);
-
-  console.log(words);
-  console.log("gameOver: " + gameOver);
 
   // KEYBOARD
   const keyColors = {};
@@ -112,7 +130,7 @@ const MainConsole = () => {
 
   useEffect(() => {
     const handleKeyPress = (event) => {
-      if (!started) {
+      if (!started && !gameOver) {
         setStarted(true);
       }
 
@@ -157,7 +175,9 @@ const MainConsole = () => {
       setCurrentWord((prevWord) => words[wordIndex + 1]);
       setWordIndex((prevIndex) => prevIndex + 1);
       setMatching((prevMatching) => "");
-      setTypedWords((prevTyped) => prevTyped + 1);
+      if (!gameOver) {
+        setTypedWords((prevTyped) => prevTyped + 1);
+      }
     }
 
     // Add an event listener for the 'keydown' event when the component mounts
@@ -197,21 +217,67 @@ const MainConsole = () => {
     return wordsPerMinute;
   };
 
+  const wordsPerMinuteFinal = Math.floor((typedWords / totalTime) * 60);
+  const userDataRef = collection(db, "userData");
+
+  const submitScore = async () => {
+    try {
+      await addDoc(userDataRef, {
+        user: auth?.currentUser?.uid,
+        wordsPerMinute: wordsPerMinuteFinal,
+      });
+      console.log("submitted");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const getHighScore = async () => {
+    try {
+      const data = await getDocs(userDataRef);
+      const filteredData = data.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id,
+      }));
+      const scores = filteredData.map((item) => item["wordsPerMinute"]);
+      const highScore = Math.max(...scores);
+      setHighScore(highScore);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  getHighScore();
+
   useEffect(() => {
     if (timer === 0) {
       openGameOver();
       setStarted(false);
       setTimer(20);
-      console.log(checkboxValues);
+      submitScore();
     }
   }, [timer]);
+
+  useEffect(() => {
+    if (gameStart) {
+      setTimer(totalTime);
+      setTypedWords(0);
+      setCurrentWord((prevWord) => words[wordIndex + 1]);
+      setMatching((prevMatching) => "");
+    }
+  }, [gameStart]);
 
   return (
     <div>
       <div className="App">
-        {gameOver ? <GameOver typedWords={typedWords} /> : null}
+        {gameOver ? (
+          <GameOver
+            typedWords={typedWords}
+            totalTime={totalTime}
+            highScore={highScore}
+          />
+        ) : null}
         {settingsOpen ? <Settings /> : null}
-        {accountModalOpen ? <Account /> : null}
+        {accountModalOpen ? <Account highScore={highScore} /> : null}
 
         <button id="settings-button" onClick={openSettings}>
           Settings
@@ -225,6 +291,7 @@ const MainConsole = () => {
         <div id="console">
           <div id="stats">
             <div>Time Remaining: {timer}</div>
+            <div>Words Typed: {typedWords}</div>
             <div>
               Average Words/minute:{" "}
               {!gameOver

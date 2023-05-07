@@ -1,10 +1,41 @@
 import React, { useEffect, useState, useContext } from "react";
 import { AppContext } from "../../AppContext";
+import { Auth } from "./auth";
 
 const GameOver = (props) => {
-  const { closeGameOver } = useContext(AppContext);
+  const { closeGameOver, gameOver } = useContext(AppContext);
 
-  const { typedWords } = props;
+  const { typedWords, totalTime, highScore } = props;
+  const wordsPerMinuteFinal = Math.floor((typedWords / totalTime) * 60);
+
+  // DATABASE
+
+  //   const userDataRef = collection(db, "userData");
+  //   useEffect(() => {
+
+  //   const submitScore = async () => {
+  //     try {
+  //       await addDoc(userDataRef, {
+  //         user: auth?.currentUser?.uid,
+  //         wordsPerMinute: wordsPerMinuteFinal,
+  //       });
+  //     } catch (error) {
+  //       console.error(error);
+  //     }
+  //   };
+
+  //   console.log("ran");
+
+  //   useEffect(() => {
+  //     submitScore();
+  //     console.log("submitted");
+  //   }, [gameOver]);
+
+  //   }, []);
+
+  //   const highScore = async () => {
+  //     await getHighScore();
+  //   };
 
   return (
     <div>
@@ -34,8 +65,9 @@ const GameOver = (props) => {
         </button>
         Game Over!
         <br />
-        Words/Minute: {typedWords} <br />
-        Total Words: {typedWords}
+        Words/Minute: {wordsPerMinuteFinal} <br />
+        Total Words: {typedWords} <br />
+        High Score: {highScore}
         <br />{" "}
         <button style={{ position: "absolute", bottom: 15, height: "30px" }}>
           Play Again
