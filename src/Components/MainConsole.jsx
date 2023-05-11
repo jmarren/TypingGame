@@ -5,15 +5,17 @@ import GameOver from "./GameOver";
 import Settings from "./Settings";
 import randomWords from "random-words";
 import Account from "./Account";
-import { db, auth } from "../config/firebase";
-import { getDocs, collection, addDoc, doc } from "firebase/firestore";
+import { auth } from "../config/firebase";
+// import { db } from "../config/firebase";
+// import { getDocs, collection, addDoc, doc } from "firebase/firestore";
 
 const MainConsole = () => {
   //STATE
   const [currentWord, setCurrentWord] = useState("");
   const [currentLetter, setCurrentLetter] = useState("");
   const [words, setWords] = useState(randomWords({ exactly: 100 }));
-  const [highScore, setHighScore] = useState(0);
+  //const [highScore, setHighScore] = useState(0);
+  const [wrongKey, setWrongKey] = useState("");
 
   // CONTEXT
   const {
@@ -78,7 +80,7 @@ const MainConsole = () => {
   const [matching, setMatching] = useState("");
   const [timer, setTimer] = useState(totalTime); // Timer starting value
   const [started, setStarted] = useState(false); // Flag to indicate if the game has started
-  const [typedWords, setTypedWords] = useState(-2);
+  const [typedWords, setTypedWords] = useState(-1);
 
   // KEYBOARD
   const keyColors = {};
@@ -128,9 +130,15 @@ const MainConsole = () => {
       }
 
       // Check if the pressed key matches the first letter of the word
-      if (event.key === currentWord[0]) {
+      if (event.key === currentWord[0] && wrongKey == "") {
         setCurrentWord(currentWord.slice(1));
         setMatching((prevMatching) => prevMatching + event.key);
+      } else if (event.key === "Backspace" && wrongKey !== "") {
+        setWrongKey((prevWrong) => prevWrong.slice(0, -1));
+      } else if (keyboardKeys.includes(event.key.toUpperCase())) {
+        setWrongKey((prevWrong) => prevWrong + event.key);
+      } else {
+        null;
       }
 
       /// Key Color Change
@@ -211,45 +219,47 @@ const MainConsole = () => {
   };
 
   const wordsPerMinuteFinal = Math.floor((typedWords / totalTime) * 60);
-  const userDataRef = collection(db, "userData");
 
-  const submitScore = async () => {
-    try {
-      await addDoc(userDataRef, {
-        user: auth?.currentUser?.uid,
-        wordsPerMinute: wordsPerMinuteFinal,
-      });
-      console.log("submitted");
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  //const userDataRef = collection(db, "userData");
 
-  const getHighScore = async () => {
-    try {
-      const data = await getDocs(userDataRef);
-      const filteredData = data.docs.map((doc) => ({
-        ...doc.data(),
-        id: doc.id,
-      }));
-      const currentUserData = filteredData.filter(
-        (obj) => obj.user === auth?.currentUser?.uid
-      );
-      const scores = currentUserData.map((item) => item["wordsPerMinute"]);
-      const highScore = Math.max(...scores);
-      setHighScore(highScore);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  getHighScore();
+  ///// ====================   WENT OVER NO-COST LIMIT ===========================================
+  //   const submitScore = async () => {
+  //     try {
+  //       await addDoc(userDataRef, {
+  //         user: auth?.currentUser?.uid,
+  //         wordsPerMinute: wordsPerMinuteFinal,
+  //       });
+  //       console.log("submitted");
+  //     } catch (error) {
+  //       console.error(error);
+  //     }
+  //   };
 
+  //   const getHighScore = async () => {
+  //     try {
+  //       const data = await getDocs(userDataRef);
+  //       const filteredData = data.docs.map((doc) => ({
+  //         ...doc.data(),
+  //         id: doc.id,
+  //       }));
+  //       const currentUserData = filteredData.filter(
+  //         (obj) => obj.user === auth?.currentUser?.uid
+  //       );
+  //       const scores = currentUserData.map((item) => item["wordsPerMinute"]);
+  //       const highScore = Math.max(...scores);
+  //       setHighScore(highScore);
+  //     } catch (error) {
+  //       console.error(error);
+  //     }
+  //   };
+  //   getHighScore();
+  // ///// =============================================================================
   useEffect(() => {
     if (timer === 0) {
       openGameOver();
       setStarted(false);
       setTimer(20);
-      submitScore();
+      //   submitScore();
     }
   }, [timer]);
 
@@ -259,8 +269,11 @@ const MainConsole = () => {
       setTypedWords(0);
       setCurrentWord((prevWord) => words[wordIndex + 1]);
       setMatching((prevMatching) => "");
+      setWrongKey((prevWrong) => "");
     }
   }, [gameStart]);
+
+  console.log(wrongKey);
 
   return (
     <div>
@@ -269,11 +282,11 @@ const MainConsole = () => {
           <GameOver
             typedWords={typedWords}
             totalTime={totalTime}
-            highScore={highScore}
+            /*highScore={highScore}*/
           />
         ) : null}
         {settingsOpen ? <Settings /> : null}
-        {accountModalOpen ? <Account highScore={highScore} /> : null}
+        {accountModalOpen ? <Account /*highScore={highScore}*/ /> : null}
 
         <button id="settings-button" onClick={openSettings}>
           Settings
@@ -297,6 +310,7 @@ const MainConsole = () => {
           </div>
           <div id="display">
             <span id="matching">{matching}</span>
+            <span id="wrong">{wrongKey}</span>
             <span>{currentWord}</span>
           </div>
           <div className="keyboard">

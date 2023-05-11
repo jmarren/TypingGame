@@ -105,6 +105,7 @@ function Settings() {
         }}
       >
         <div
+          id="settings-title"
           style={{
             fontFamily: "Tahoma",
             position: "relative",
@@ -122,6 +123,7 @@ function Settings() {
         <button
           onClick={closeSettings}
           style={{
+            fontSize: "1rem",
             position: "absolute",
             top: "10px",
             right: "10px",

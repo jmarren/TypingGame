@@ -5,7 +5,7 @@ import { Auth } from "./auth";
 const GameOver = (props) => {
   const { closeGameOver, gameOver } = useContext(AppContext);
 
-  const { typedWords, totalTime, highScore } = props;
+  const { typedWords, totalTime /*highScore */ } = props;
   const wordsPerMinuteFinal = Math.floor((typedWords / totalTime) * 60);
 
   // DATABASE

@@ -3,8 +3,8 @@ import { AppContext } from "../../AppContext";
 import { auth, googleProvider } from "../config/firebase";
 import Auth from "./auth";
 
-const Account = (props) => {
-  const { highScore } = props;
+const Account = (/*props*/) => {
+  //   const { highScore } = props;
   const { closeAccountModal } = useContext(AppContext);
   console.log(auth?.currentUser?.uid);
   return (
@@ -34,7 +34,7 @@ const Account = (props) => {
       >
         <div>
           <Auth /> <br />
-          High Score: {highScore}
+          High Score: {/*highScore*/}
         </div>
 
         <button
