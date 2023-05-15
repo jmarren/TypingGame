@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useMemo } from "react";
 import "../App.css";
 import { AppContext } from "../../AppContext";
 import GameOver from "./GameOver";
@@ -14,13 +14,21 @@ const MainConsole = () => {
   const [currentWord, setCurrentWord] = useState("");
   const [currentLetter, setCurrentLetter] = useState("");
   const [words, setWords] = useState(randomWords({ exactly: 100 }));
+  const [matching, setMatching] = useState("");
   //const [highScore, setHighScore] = useState(0);
   const [wrongKey, setWrongKey] = useState("");
+  const [isActive, setIsActive] = useState(keyActive);
+  const [buttonColor, setBackgroundColor] = useState(keyColors);
+  const [letterIndex, setLetterIndex] = useState(0);
+
+  const [timer, setTimer] = useState(TOTALTIME); // Timer starting value
+  const [started, setStarted] = useState(false); // Flag to indicate if the game has started
+  const [typedWords, setTypedWords] = useState(-1);
+  const TOTALTIME = 20;
 
   // CONTEXT
   const {
     gameOver,
-    setGameOver,
     openGameOver,
     settingsOpen,
     openSettings,
@@ -30,12 +38,11 @@ const MainConsole = () => {
     wordIndex,
     setWordIndex,
     gameStart,
-    setGameStart,
   } = useContext(AppContext);
 
-  useEffect(() => {
-    setCurrentWord(words[0]);
-  }, [words]);
+  //   useEffect(() => {
+  //     setCurrentWord(words[0]);
+  //   }, [words]);
 
   useEffect(() => {
     if (
@@ -50,14 +57,26 @@ const MainConsole = () => {
 
   useEffect(() => {
     setWordIndex((prevIndex) => prevIndex + 1);
-    setCurrentWord((prevWord) => words[wordIndex + 1]);
+    setCurrentWord(() => words[0]);
     setMatching(() => "");
   }, [words, gameStart]);
 
+  useEffect(() => {
+    if (currentWord === "") {
+      setCurrentWord(() => words[wordIndex + 1]);
+      setWordIndex((prevIndex) => prevIndex + 1);
+      setMatching(() => "");
+      if (!gameOver) {
+        setTypedWords((prevTyped) => prevTyped + 1);
+      }
+    }
+  }, [currentWord]);
+
   // GENERATE STRINGS FUNCTION
-  function generateStrings(letters) {
+  const generateStrings = (letters) => {
     const strings = [];
 
+    console.log("strings function ran");
     for (let i = 0; i < 100; i++) {
       const length = Math.floor(Math.random() * 13) + 3; // generate a random length between 3 and 15
       let str = [];
@@ -71,16 +90,9 @@ const MainConsole = () => {
     }
 
     return strings;
-  }
-  //////
+  };
 
-  const totalTime = 20;
-  //   const [wordIndex, setWordIndex] = useState(0);
-  const [letterIndex, setLetterIndex] = useState(0);
-  const [matching, setMatching] = useState("");
-  const [timer, setTimer] = useState(totalTime); // Timer starting value
-  const [started, setStarted] = useState(false); // Flag to indicate if the game has started
-  const [typedWords, setTypedWords] = useState(-1);
+  //////
 
   // KEYBOARD
   const keyColors = {};
@@ -119,8 +131,6 @@ const MainConsole = () => {
     keyActive[key] = false;
   }
 
-  const [isActive, setIsActive] = useState(keyActive);
-  const [buttonColor, setBackgroundColor] = useState(keyColors);
   /////
 
   useEffect(() => {
@@ -129,17 +139,51 @@ const MainConsole = () => {
         setStarted(true);
       }
 
-      // Check if the pressed key matches the first letter of the word
-      if (event.key === currentWord[0] && wrongKey == "") {
-        setCurrentWord(currentWord.slice(1));
-        setMatching((prevMatching) => prevMatching + event.key);
-      } else if (event.key === "Backspace" && wrongKey !== "") {
-        setWrongKey((prevWrong) => prevWrong.slice(0, -1));
-      } else if (keyboardKeys.includes(event.key.toUpperCase())) {
-        setWrongKey((prevWrong) => prevWrong + event.key);
-      } else {
-        null;
-      }
+      const keyPressed = event.key;
+
+      const checkInput = () => {
+        // Check if the pressed key matches the first letter of the word
+
+        if (wrongKey == "") {
+          if (keyPressed === currentWord[0]) {
+            setCurrentWord(currentWord.slice(1));
+            setMatching((prevMatching) => prevMatching + keyPressed);
+          } else if (keyboardKeys.includes(keyPressed.toUpperCase())) {
+            setWrongKey((prevWrong) => prevWrong + keyPressed);
+          }
+        }
+
+        if (wrongKey !== "") {
+          if (keyPressed === "Backspace") {
+            setWrongKey((prevWrong) => prevWrong.slice(0, -1));
+          } else if (keyboardKeys.includes(keyPressed.toUpperCase())) {
+            setWrongKey((prevWrong) => prevWrong + keyPressed);
+          }
+        }
+
+        // } else if (keyPressed === "Backspace") {
+        //   setWrongKey((prevWrong) => prevWrong.slice(0, -1));
+        // }
+      };
+
+      //     if (event.key === currentWord[0] && wrongKey == "") {
+      //       setCurrentWord(currentWord.slice(1));
+      //       setMatching((prevMatching) => prevMatching + event.key);
+      //     }
+
+      //     if (event.key === "Backspace" && wrongKey !== "") {
+      //       setWrongKey((prevWrong) => prevWrong.slice(0, -1));
+      //     }
+
+      //     if (
+      //       keyboardKeys.includes(event.key.toUpperCase()) &&
+      //       event.key !== currentWord[0]
+      //     ) {
+      //       setWrongKey((prevWrong) => prevWrong + event.key);
+      //     }
+      //   };
+
+      checkInput();
 
       /// Key Color Change
       for (let i = 0; i < keyboardKeys.length; i++) {
@@ -172,14 +216,6 @@ const MainConsole = () => {
         }
       }
     };
-    if (currentWord === "") {
-      setCurrentWord((prevWord) => words[wordIndex + 1]);
-      setWordIndex((prevIndex) => prevIndex + 1);
-      setMatching((prevMatching) => "");
-      if (!gameOver) {
-        setTypedWords((prevTyped) => prevTyped + 1);
-      }
-    }
 
     // Add an event listener for the 'keydown' event when the component mounts
     document.addEventListener("keydown", handleKeyPress);
@@ -218,7 +254,7 @@ const MainConsole = () => {
     return wordsPerMinute;
   };
 
-  const wordsPerMinuteFinal = Math.floor((typedWords / totalTime) * 60);
+  const wordsPerMinuteFinal = Math.floor((typedWords / TOTALTIME) * 60);
 
   //const userDataRef = collection(db, "userData");
 
@@ -255,7 +291,7 @@ const MainConsole = () => {
   //   getHighScore();
   // ///// =============================================================================
   useEffect(() => {
-    if (timer === 0) {
+    if (timer === -1000000) {
       openGameOver();
       setStarted(false);
       setTimer(20);
@@ -265,7 +301,7 @@ const MainConsole = () => {
 
   useEffect(() => {
     if (gameStart) {
-      setTimer(totalTime);
+      setTimer(TOTALTIME);
       setTypedWords(0);
       setCurrentWord((prevWord) => words[wordIndex + 1]);
       setMatching((prevMatching) => "");
@@ -274,6 +310,7 @@ const MainConsole = () => {
   }, [gameStart]);
 
   console.log(wrongKey);
+  console.log(matching);
 
   return (
     <div>
@@ -281,7 +318,7 @@ const MainConsole = () => {
         {gameOver ? (
           <GameOver
             typedWords={typedWords}
-            totalTime={totalTime}
+            TOTALTIME={TOTALTIME}
             /*highScore={highScore}*/
           />
         ) : null}
@@ -305,7 +342,7 @@ const MainConsole = () => {
               Average Words/minute:{" "}
               {!gameOver
                 ? calculateWordsPerMinute()
-                : Math.floor((typedWords / totalTime) * 60)}
+                : Math.floor((typedWords / TOTALTIME) * 60)}
             </div>
           </div>
           <div id="display">

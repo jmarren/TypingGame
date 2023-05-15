@@ -67,7 +67,7 @@ const GameOver = (props) => {
         <br />
         Words/Minute: {wordsPerMinuteFinal} <br />
         Total Words: {typedWords} <br />
-        High Score: {highScore}
+        High Score: {/*{highScore}*/}
         <br />{" "}
         <button style={{ position: "absolute", bottom: 15, height: "30px" }}>
           Play Again
