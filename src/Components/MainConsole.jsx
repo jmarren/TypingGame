@@ -6,10 +6,27 @@ import Settings from "./Settings";
 import randomWords from "random-words";
 import Account from "./Account";
 import { auth } from "../config/firebase";
-// import { db } from "../config/firebase";
-// import { getDocs, collection, addDoc, doc } from "firebase/firestore";
+import { db } from "../config/firebase";
+import { collection, addDoc, doc } from "firebase/firestore";
 
 const MainConsole = () => {
+  ////////////////////////////////  CONTEXT  ////////////////////////////////////////
+  const {
+    gameOver,
+    openGameOver,
+    settingsOpen,
+    openSettings,
+    accountModalOpen,
+    openAccountModal,
+    checkboxValues,
+    wordIndex,
+    setWordIndex,
+    gameReady,
+    signedIn,
+    signUserIn,
+    totalTime,
+  } = useContext(AppContext);
+
   //////////////////////////////// CONSTANTS  /////////////////////////////////////
   const keyboardKeys = [
     "Q",
@@ -45,40 +62,23 @@ const MainConsole = () => {
     KEYCOLORS[key] = "#858585";
     KEYACTIVE[key] = false;
   }
-  const TOTALTIME = 20;
 
   /////////////////////////////////  STATE  /////////////////////////////////////////
   const [currentWord, setCurrentWord] = useState("");
   const [currentLetter, setCurrentLetter] = useState("");
   const [words, setWords] = useState(randomWords({ exactly: 100 }));
   const [matching, setMatching] = useState("");
-  //const [highScore, setHighScore] =                                    useState(0);
+  //const [highScore, setHighScore] =  useState(0);
   const [wrongKey, setWrongKey] = useState("");
   const [isActive, setIsActive] = useState(KEYACTIVE);
   const [buttonColor, setBackgroundColor] = useState(KEYCOLORS);
   const [letterIndex, setLetterIndex] = useState(0);
-  const [timer, setTimer] = useState(TOTALTIME);
   const [started, setStarted] = useState(false);
   const [typedWords, setTypedWords] = useState(-1);
-
-  ////////////////////////////////  CONTEXT  ////////////////////////////////////////
-  const {
-    gameOver,
-    openGameOver,
-    settingsOpen,
-    openSettings,
-    accountModalOpen,
-    openAccountModal,
-    checkboxValues,
-    wordIndex,
-    setWordIndex,
-    gameStart,
-  } = useContext(AppContext);
-
-  //   useEffect(() => {
-  //     setCurrentWord(words[0]);
-  //   }, [words]);
-
+  const [allIncorrect, setAllIncorrect] = useState([]);
+  const [intervalId, setIntervalId] = useState(null);
+  const [timer, setTimer] = useState(totalTime);
+  const wordsPerMinuteFinal = Math.floor((typedWords / totalTime) * 60);
   //////////////////////////////////// FUNCTIONS //////////////////////////////////
 
   const NextWord = () => {
@@ -86,6 +86,8 @@ const MainConsole = () => {
     setCurrentWord(() => words[0]);
     setMatching(() => "");
   };
+
+  // -------------------
 
   const generateStrings = (letters) => {
     const strings = [];
@@ -104,6 +106,8 @@ const MainConsole = () => {
     return strings;
   };
 
+  // -------------------
+
   const changeWordsArray = () => {
     if (
       checkboxValues[0] === "randomWords" ||
@@ -115,6 +119,8 @@ const MainConsole = () => {
     }
   };
 
+  // -------------------
+
   const checkInput = (keyPressed) => {
     if (!gameOver) {
       if (wrongKey == "") {
@@ -123,6 +129,7 @@ const MainConsole = () => {
           setMatching((prevMatching) => prevMatching + keyPressed);
         } else if (keyboardKeys.includes(keyPressed.toUpperCase())) {
           setWrongKey((prevWrong) => prevWrong + keyPressed);
+          setAllIncorrect((prevIncorrect) => [...prevIncorrect, keyPressed]);
         }
       }
 
@@ -131,22 +138,19 @@ const MainConsole = () => {
           setWrongKey((prevWrong) => prevWrong.slice(0, -1));
         } else if (keyboardKeys.includes(keyPressed.toUpperCase())) {
           setWrongKey((prevWrong) => prevWrong + keyPressed);
+          setAllIncorrect((prevIncorrect) => [...prevIncorrect, keyPressed]);
         }
       }
     }
   };
 
-  if (timer === 0) {
-    openGameOver();
-    setStarted(false);
-    setTimer(20);
-    //   submitScore();
-  }
+  // -------------------
 
   const handleKeyPress = (event) => {
-    if (!started && !gameOver) {
+    if (!started && gameReady) {
       setStarted(true);
     }
+
     const keyPressed = event.key;
 
     checkInput(keyPressed);
@@ -167,6 +171,8 @@ const MainConsole = () => {
     }
   };
 
+  // -------------------
+
   const handleKeyUp = (event) => {
     // Key Color Change
     for (let i = 0; i < keyboardKeys.length; i++) {
@@ -183,34 +189,74 @@ const MainConsole = () => {
     }
   };
 
-  const StartGame = () => {
-    if (gameStart) {
-      setTimer(TOTALTIME);
+  // -------------------
+
+  const ResetGame = () => {
+    if (gameReady) {
+      setTimer(totalTime);
       setTypedWords(0);
-      setCurrentWord((prevWord) => words[wordIndex + 1]);
-      setMatching((prevMatching) => "");
-      setWrongKey((prevWrong) => "");
+      setCurrentWord(words[wordIndex + 1]);
+      setMatching("");
+      setWrongKey("");
+      setAllIncorrect([]);
     }
   };
+
+  // -------------------
+
+  const StartTimer = () => {
+    const id = setInterval(() => {
+      setTimer((prevTimer) => prevTimer - 1);
+    }, 1000);
+
+    setIntervalId(id);
+  };
+
+  // -------------------
+
+  const StopTimer = () => {
+    clearInterval(intervalId);
+    setIntervalId(null);
+  };
+
+  // -------------------
 
   const calculateWordsPerMinute = () => {
     // Calculate words per minute based on the typed words and the timer value
     if (!started) {
       return 0;
     }
-    const wordsPerMinute = Math.floor((typedWords / (20 - timer)) * 60);
+    const wordsPerMinute = Math.floor((typedWords / (totalTime - timer)) * 60);
     return wordsPerMinute;
   };
 
   //////////////////////////////////////  EFFECTS  ///////////////////////////////////
 
   useEffect(() => {
+    if (timer === 0) {
+      openGameOver();
+      setStarted(false);
+      setTimer(totalTime);
+      StopTimer();
+    }
+  }, [timer]);
+
+  useEffect(() => {
+    setCurrentWord(words[0]);
+    setTimer(totalTime);
+  }, [words]);
+
+  useEffect(() => {
     NextWord();
-  }, [words, gameStart]);
+  }, [words, gameReady]);
+
+  // -------------------
 
   useEffect(() => {
     changeWordsArray();
   }, [checkboxValues]);
+
+  // -------------------
 
   useEffect(() => {
     if (currentWord === "") {
@@ -223,6 +269,14 @@ const MainConsole = () => {
     }
   }, [currentWord]);
 
+  // -------------------
+
+  //   useEffect(() => {
+  //     setTimer(totalTime);
+  //   }, [totalTime]);
+
+  // -------------------
+
   useEffect(() => {
     // Add an event listener for the 'keydown' event when the component mounts
     document.addEventListener("keydown", handleKeyPress);
@@ -231,45 +285,43 @@ const MainConsole = () => {
     // Clean up the event listener when the component unmounts
     return () => {
       document.removeEventListener("keydown", handleKeyPress);
-      document.removeEventListener("keyup", handleKeyUp); // Fixed here
+      document.removeEventListener("keyup", handleKeyUp);
     };
   }, [currentWord, wrongKey]);
 
-  useEffect(() => {
-    let intervalId;
-    // Start the timer when the game is started
-    if (started && !gameOver) {
-      intervalId = setInterval(() => {
-        // Decrease the timer by 1 every second
-        setTimer((prevTimer) => prevTimer - 1);
-      }, 1000);
-    }
+  // -------------------
 
-    // Clean up the interval when the component unmounts or when the game is finished
-    return () => {
-      clearInterval(intervalId);
-    };
+  useEffect(() => {
+    if (started) {
+      StartTimer();
+    }
   }, [started]);
 
-  const wordsPerMinuteFinal = Math.floor((typedWords / TOTALTIME) * 60);
+  // -------------------
 
   useEffect(() => {
-    StartGame();
-  }, [gameStart]);
-  //const userDataRef = collection(db, "userData");
+    if (gameReady) {
+      ResetGame();
+    }
+  }, [gameReady]);
+
+  useEffect(() => {
+    if (auth?.currentUser?.uid !== null) {
+      signUserIn();
+    }
+  }, []);
+
+  /// ==============================  DEBUG LOGS  ================================================
+  //   console.log("signedIn: " + signedIn);
+
+  console.log("started: " + started);
+  //   console.log("gameOver: " + gameOver);
+  console.log("settingsOpen: " + settingsOpen);
+  console.log("timer: " + timer);
+  console.log("gameReady: " + gameReady);
+  //   console.log("settingsOpen" + settingsOpen);
 
   ///// ====================   WENT OVER NO-COST LIMIT ===========================================
-  //   const submitScore = async () => {
-  //     try {
-  //       await addDoc(userDataRef, {
-  //         user: auth?.currentUser?.uid,
-  //         wordsPerMinute: wordsPerMinuteFinal,
-  //       });
-  //       console.log("submitted");
-  //     } catch (error) {
-  //       console.error(error);
-  //     }
-  //   };
 
   //   const getHighScore = async () => {
   //     try {
@@ -291,22 +343,13 @@ const MainConsole = () => {
   //   getHighScore();
   // ///// =============================================================================
 
-  //   useEffect(() => {
-  //     EndGame();
-  //   }, [timer]);
-
-  /// ==========================
-
-  console.log(wrongKey);
-  console.log(matching);
-
   return (
     <div>
       <div className="App">
         {gameOver ? (
           <GameOver
             typedWords={typedWords}
-            TOTALTIME={TOTALTIME}
+            allIncorrect={allIncorrect}
             /*highScore={highScore}*/
           />
         ) : null}

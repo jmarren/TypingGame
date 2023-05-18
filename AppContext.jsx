@@ -13,26 +13,29 @@ export const AppProvider = ({ children }) => {
   const [checkboxValues, setCheckboxValues] = useState(["randomWords"]);
   const [words, setWords] = useState([]);
   const [wordIndex, setWordIndex] = useState(0);
-  const [gameStart, setGameStart] = useState(false);
+  const [gameReady, setGameReady] = useState(true);
   //   const [typedWords, setTypedWords ] = useState(0)
+  const [totalTime, setTotalTime] = useState(60);
 
   const [newGame, setNewGame] = useState(false);
 
   const closeGameOver = () => {
     setGameOver(false);
-    setGameStart(true);
+    setGameReady(true);
   };
 
   const openGameOver = () => {
-    setGameStart(false);
+    setGameReady(false);
     setGameOver(true);
   };
 
   const openSettings = () => {
     setSettingsOpen(true);
+    setGameReady(false);
   };
   const closeSettings = () => {
     setSettingsOpen(false);
+    setGameReady(true);
   };
 
   const openAccountModal = () => {
@@ -41,6 +44,18 @@ export const AppProvider = ({ children }) => {
 
   const closeAccountModal = () => {
     setAccountModalOpen(false);
+  };
+
+  const signUserIn = () => {
+    setSignedIn(true);
+  };
+
+  const signUserOut = () => {
+    setSignedIn(false);
+  };
+
+  const changeTime = (time) => {
+    setTotalTime(time);
   };
 
   // Provide the context value
@@ -62,8 +77,12 @@ export const AppProvider = ({ children }) => {
     setWords,
     wordIndex,
     setWordIndex,
-    gameStart,
-    setGameStart,
+    gameReady,
+    setGameReady,
+    signUserIn,
+    signUserOut,
+    changeTime,
+    totalTime,
   };
 
   return (

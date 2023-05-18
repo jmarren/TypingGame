@@ -1,23 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 import { auth, googleProvider } from "../config/firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   signOut,
 } from "firebase/auth";
+import { AppContext } from "../../AppContext";
 
 export const Auth = () => {
-  const [signedIn, setSignedIn] = useState(false);
+  // const [signedIn, setSignedIn] = useState(false);
+  const { signedIn, signUserIn, signUserOut } = useContext(AppContext);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [userEmail, setUserEmail] = useState("");
 
   console.log(auth?.currentUser?.email);
+
+  useEffect(() => {
+    console.log("signedIn changed");
+    if (signedIn) {
+      setUserEmail(auth?.currentUser?.email);
+    } else {
+      setUserEmail("");
+    }
+  }, [signedIn]);
 
   const signIn = async () => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      setSignedIn(true);
+      signUserIn();
     } catch (err) {
       console.error(err);
     }
@@ -26,7 +38,8 @@ export const Auth = () => {
   const signInWithGoogle = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-      setSignedIn(true);
+      signUserIn();
+      // setUserEmail(currentUser?)
     } catch (err) {
       console.error(err);
     }
@@ -35,7 +48,7 @@ export const Auth = () => {
   const logOut = async () => {
     try {
       await signOut(auth);
-      setSignedIn(false);
+      signUserOut();
     } catch (err) {
       console.error(err);
     }
@@ -45,7 +58,7 @@ export const Auth = () => {
     <div>
       {auth?.currentUser?.uid != null ? (
         <div>
-          {auth.currentUser.email}
+          {userEmail}
           <br />
           <button onClick={logOut}>Sign Out</button>
         </div>

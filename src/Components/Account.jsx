@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { AppContext } from "../../AppContext";
 import { auth, googleProvider } from "../config/firebase";
-import Auth from "./auth";
+import Auth from "./Auth";
 
 const Account = (/*props*/) => {
   //   const { highScore } = props;

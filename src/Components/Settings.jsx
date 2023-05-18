@@ -2,8 +2,15 @@ import React, { useEffect, useState, useContext } from "react";
 import { AppContext } from "../../AppContext";
 
 function Settings() {
-  const { closeSettings, setCheckboxValues, checkboxValues } =
-    useContext(AppContext);
+  const {
+    closeSettings,
+    setCheckboxValues,
+    checkboxValues,
+    changeTime,
+    openSettings,
+  } = useContext(AppContext);
+
+  openSettings();
 
   const [letterCheckboxesDisabled, setLetterCheckboxesDisabled] =
     useState(false);
@@ -22,9 +29,10 @@ function Settings() {
       }
     });
     setCheckboxValues(checkedValues);
-  };
 
-  console.log(checkboxValues);
+    const timeSet = event.target.querySelector('input[id="timeSet"]');
+    changeTime(timeSet.value);
+  };
 
   const handleLetterCheckboxChange = (event) => {
     const randomWordsCheckbox = event.target.form.randomWords;
@@ -206,6 +214,9 @@ function Settings() {
                 disabled={letterCheckboxesDisabled}
               />{" "}
               Random Words{" "}
+            </label>
+            <label>
+              Time: <input type="Number" id="timeSet" />
             </label>
 
             <button

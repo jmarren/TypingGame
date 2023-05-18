@@ -1,28 +1,64 @@
 import React, { useEffect, useState, useContext } from "react";
 import { AppContext } from "../../AppContext";
-import { Auth } from "./auth";
+import { Auth } from "./Auth";
+import { auth } from "../config/firebase";
+import { db } from "../config/firebase";
+import { collection, addDoc, doc } from "firebase/firestore";
+const userDataRef = collection(db, "userData");
 
 const GameOver = (props) => {
-  const { closeGameOver, gameOver } = useContext(AppContext);
+  const { closeGameOver, gameOver, signedIn, totalTime } =
+    useContext(AppContext);
 
-  const { typedWords, TOTALTIME /*highScore */ } = props;
-  const wordsPerMinuteFinal = Math.floor((typedWords / TOTALTIME) * 60);
+  const { typedWords, allIncorrect /*highScore */ } = props;
+  const wordsPerMinuteFinal = Math.floor((typedWords / totalTime) * 60);
 
+  const totalMistakes = allIncorrect.length;
+
+  const currentDate = new Date();
+  const dateObject = {
+    year: currentDate.getFullYear(),
+    month: currentDate.getMonth() + 1,
+    date: currentDate.getDate(),
+    hour: currentDate.getHours(),
+    minute: currentDate.getMinutes(),
+    second: currentDate.getSeconds(),
+  };
   // DATABASE
 
-  //   const userDataRef = collection(db, "userData");
-  //   useEffect(() => {
+  const submitScore = async () => {
+    console.log("submit ran");
 
-  //   const submitScore = async () => {
-  //     try {
-  //       await addDoc(userDataRef, {
-  //         user: auth?.currentUser?.uid,
-  //         wordsPerMinute: wordsPerMinuteFinal,
-  //       });
-  //     } catch (error) {
-  //       console.error(error);
-  //     }
-  //   };
+    try {
+      await addDoc(userDataRef, {
+        user: auth?.currentUser?.uid,
+        wordsPerMinute: wordsPerMinuteFinal,
+        date: dateObject,
+      });
+      console.log("submitted");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  useEffect(() => {
+    if (signedIn) {
+      submitScore();
+    }
+  }, []);
+
+  // const userDataRef = collection(db, "userData");
+  // useEffect(() => {
+
+  // const submitScore = async () => {
+  //   try {
+  //     await addDoc(userDataRef, {
+  //       user: auth?.currentUser?.uid,
+  //       wordsPerMinute: wordsPerMinuteFinal,
+  //     });
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
   //   console.log("ran");
 
@@ -50,10 +86,10 @@ const GameOver = (props) => {
           position: "fixed",
           top: "25%",
           left: "30%",
-          height: "40%",
+          height: "50%",
           width: "40%",
           borderRadius: "20px",
-          boxShadow: "10",
+          boxShadow: "0px 0px 100px rgba(0, 0, 0, .7)",
           border: "10px solid white",
         }}
       >
@@ -67,6 +103,7 @@ const GameOver = (props) => {
         <br />
         Words/Minute: {wordsPerMinuteFinal} <br />
         Total Words: {typedWords} <br />
+        Total Mistakes: {totalMistakes} <br />
         High Score: {/*{highScore}*/}
         <br />{" "}
         <button style={{ position: "absolute", bottom: 15, height: "30px" }}>
