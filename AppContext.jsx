@@ -35,7 +35,7 @@ export const AppProvider = ({ children }) => {
   };
   const closeSettings = () => {
     setSettingsOpen(false);
-    setGameReady(true);
+    // setGameReady(true);
   };
 
   const openAccountModal = () => {
@@ -56,6 +56,14 @@ export const AppProvider = ({ children }) => {
 
   const changeTime = (time) => {
     setTotalTime(time);
+  };
+
+  const ReadyToPlay = () => {
+    setGameReady(true);
+  };
+
+  const NotReadyToPlay = () => {
+    setGameReady(false);
   };
 
   // Provide the context value
@@ -83,6 +91,8 @@ export const AppProvider = ({ children }) => {
     signUserOut,
     changeTime,
     totalTime,
+    ReadyToPlay,
+    NotReadyToPlay,
   };
 
   return (

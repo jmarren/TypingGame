@@ -2,15 +2,8 @@ import React, { useEffect, useState, useContext } from "react";
 import { AppContext } from "../../AppContext";
 
 function Settings() {
-  const {
-    closeSettings,
-    setCheckboxValues,
-    checkboxValues,
-    changeTime,
-    openSettings,
-  } = useContext(AppContext);
-
-  openSettings();
+  const { closeSettings, setCheckboxValues, checkboxValues, changeTime } =
+    useContext(AppContext);
 
   const [letterCheckboxesDisabled, setLetterCheckboxesDisabled] =
     useState(false);
@@ -31,6 +24,7 @@ function Settings() {
     setCheckboxValues(checkedValues);
 
     const timeSet = event.target.querySelector('input[id="timeSet"]');
+
     changeTime(timeSet.value);
   };
 
@@ -216,7 +210,7 @@ function Settings() {
               Random Words{" "}
             </label>
             <label>
-              Time: <input type="Number" id="timeSet" />
+              Time: <input type="Number" id="timeSet" min="1" />
             </label>
 
             <button

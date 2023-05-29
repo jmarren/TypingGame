@@ -12,6 +12,8 @@ import { collection, addDoc, doc } from "firebase/firestore";
 const MainConsole = () => {
   ////////////////////////////////  CONTEXT  ////////////////////////////////////////
   const {
+    ReadyToPlay,
+    NotReadyToPlay,
     gameOver,
     openGameOver,
     settingsOpen,
@@ -84,7 +86,7 @@ const MainConsole = () => {
   const NextWord = () => {
     setWordIndex((prevIndex) => prevIndex + 1);
     setCurrentWord(() => words[0]);
-    setMatching(() => "");
+    setMatching("");
   };
 
   // -------------------
@@ -147,7 +149,7 @@ const MainConsole = () => {
   // -------------------
 
   const handleKeyPress = (event) => {
-    if (!started && gameReady) {
+    if (!started && gameReady && !settingsOpen && !gameOver) {
       setStarted(true);
     }
 
@@ -192,14 +194,13 @@ const MainConsole = () => {
   // -------------------
 
   const ResetGame = () => {
-    if (gameReady) {
-      setTimer(totalTime);
-      setTypedWords(0);
-      setCurrentWord(words[wordIndex + 1]);
-      setMatching("");
-      setWrongKey("");
-      setAllIncorrect([]);
-    }
+    ReadyToPlay();
+    setTimer(totalTime);
+    setTypedWords(0);
+    setCurrentWord(words[wordIndex + 1]);
+    setMatching("");
+    setWrongKey("");
+    setAllIncorrect([]);
   };
 
   // -------------------
@@ -235,7 +236,6 @@ const MainConsole = () => {
   useEffect(() => {
     if (timer === 0) {
       openGameOver();
-      setStarted(false);
       setTimer(totalTime);
       StopTimer();
     }
@@ -292,24 +292,30 @@ const MainConsole = () => {
   // -------------------
 
   useEffect(() => {
-    if (started) {
+    if (started && gameReady) {
       StartTimer();
+    } else {
+      StopTimer();
     }
-  }, [started]);
+  }, [started, gameReady]);
 
   // -------------------
 
   useEffect(() => {
-    if (gameReady) {
+    if (settingsOpen || gameOver) {
+      setStarted(false);
+      NotReadyToPlay();
+    } else {
       ResetGame();
+      ReadyToPlay();
     }
-  }, [gameReady]);
+  }, [settingsOpen, gameOver]);
 
   useEffect(() => {
     if (auth?.currentUser?.uid !== null) {
       signUserIn();
     }
-  }, []);
+  }, [settingsOpen, gameOver]);
 
   /// ==============================  DEBUG LOGS  ================================================
   //   console.log("signedIn: " + signedIn);
